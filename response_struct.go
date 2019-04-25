@@ -14,3 +14,8 @@ type Comic struct {
 	Image string
 	Date  time.Time
 }
+
+type Event struct {
+	Title string
+	ID    int
+}

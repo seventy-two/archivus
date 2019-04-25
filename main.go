@@ -45,22 +45,30 @@ func main() {
 		Value:  "",
 		EnvVar: "MARVEL_PRIVATE_KEY",
 	})
+	addr := app.String(cli.StringOpt{
+		Name:   "Archivus Address",
+		Value:  "localhost:5000",
+		EnvVar: "ARCHIVUS_ADDRESS",
+	})
 
 	app.Action = func() {
-		archivus(app, *publicKey, *privateKey)
+		archivus(app, *addr, *publicKey, *privateKey)
 	}
 
 	app.Run(os.Args)
 }
 
-func archivus(app *cli.Cli, public, private string) {
+func archivus(app *cli.Cli, addr, public, private string) {
 	errors := make(chan error)
 
 	router := mux.NewRouter()
 	handler := newHTTPHandler(public, private)
 
 	router.HandleFunc("/archivus/eventComicsByPrefix/{prefix}", getEventComicsByEventPrefix(handler)).Methods(http.MethodGet)
-	server := &http.Server{Addr: "localhost:5000", Handler: router}
+	router.HandleFunc("/archivus/eventComicsByEventID/{ID}", getEventComicsByEventID(handler)).Methods(http.MethodGet)
+	router.HandleFunc("/archivus/getEvents", getEvents(handler)).Methods(http.MethodGet)
+
+	server := &http.Server{Addr: addr, Handler: router}
 
 	defer func() {
 		log.Info("Stoping HTTP server")
